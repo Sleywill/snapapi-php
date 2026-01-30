@@ -1,6 +1,6 @@
 # SnapAPI PHP SDK
 
-Official PHP SDK for [SnapAPI](https://snapapi.dev) - Lightning-fast screenshot API for developers.
+Official PHP SDK for [SnapAPI](https://snapapi.pics) - Lightning-fast screenshot API for developers.
 
 ## Requirements
 
@@ -49,17 +49,31 @@ $screenshot = $client->screenshot([
 ]);
 ```
 
-### Mobile Screenshot
+### Device Presets
+
+Capture screenshots using pre-configured device settings:
 
 ```php
+// Using device preset
 $screenshot = $client->screenshot([
     'url' => 'https://example.com',
-    'width' => 375,
-    'height' => 812,
-    'mobile' => true,
-    'scale' => 3 // Retina
+    'device' => 'iphone-15-pro'
 ]);
+
+// Or use the convenience method
+$screenshot = $client->screenshotDevice('https://example.com', 'ipad-pro-12.9');
+
+// Get all available device presets
+$devices = $client->getDevices();
+print_r($devices['devices']); // Grouped by: desktop, mac, iphone, ipad, android
 ```
+
+Available device presets:
+- **Desktop**: `desktop-1080p`, `desktop-1440p`, `desktop-4k`
+- **Mac**: `macbook-pro-13`, `macbook-pro-16`, `imac-24`
+- **iPhone**: `iphone-se`, `iphone-12`, `iphone-13`, `iphone-14`, `iphone-14-pro`, `iphone-15`, `iphone-15-pro`, `iphone-15-pro-max`
+- **iPad**: `ipad`, `ipad-mini`, `ipad-air`, `ipad-pro-11`, `ipad-pro-12.9`
+- **Android**: `pixel-7`, `pixel-8`, `pixel-8-pro`, `samsung-galaxy-s23`, `samsung-galaxy-s24`, `samsung-galaxy-tab-s9`
 
 ### Dark Mode
 
@@ -70,26 +84,140 @@ $screenshot = $client->screenshot([
 ]);
 ```
 
+### Screenshot from HTML
+
+```php
+$html = '<html><body><h1>Hello World</h1></body></html>';
+$screenshot = $client->screenshotFromHtml($html, [
+    'width' => 800,
+    'height' => 600
+]);
+```
+
 ### PDF Export
 
 ```php
-$pdf = $client->screenshot([
+$pdf = $client->pdf([
     'url' => 'https://example.com',
-    'format' => 'pdf',
-    'fullPage' => true
+    'pdfOptions' => [
+        'pageSize' => 'a4',
+        'landscape' => false,
+        'marginTop' => '20mm',
+        'marginBottom' => '20mm',
+        'marginLeft' => '15mm',
+        'marginRight' => '15mm',
+        'printBackground' => true,
+        'displayHeaderFooter' => true,
+        'headerTemplate' => '<div style="font-size:10px;text-align:center;width:100%;">Header</div>',
+        'footerTemplate' => '<div style="font-size:10px;text-align:center;width:100%;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>'
+    ]
 ]);
 
 file_put_contents('document.pdf', $pdf);
 ```
 
-### Block Ads & Cookies
+### Geolocation Emulation
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://maps.google.com',
+    'geolocation' => [
+        'latitude' => 48.8566,
+        'longitude' => 2.3522,
+        'accuracy' => 100
+    ]
+]);
+```
+
+### Timezone & Locale
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'timezone' => 'America/New_York',
+    'locale' => 'en-US'
+]);
+```
+
+### Proxy Support
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'proxy' => [
+        'server' => 'http://proxy.example.com:8080',
+        'username' => 'user',
+        'password' => 'pass'
+    ]
+]);
+```
+
+### Hide Elements
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'hideSelectors' => [
+        '.cookie-banner',
+        '#popup-modal',
+        '.advertisement'
+    ]
+]);
+```
+
+### Click Before Screenshot
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'clickSelector' => '.accept-cookies-button',
+    'clickDelay' => 500, // Wait 500ms after clicking
+    'delay' => 1000 // Then wait another 1s before screenshot
+]);
+```
+
+### Block Ads, Trackers, Chat Widgets
 
 ```php
 $screenshot = $client->screenshot([
     'url' => 'https://example.com',
     'blockAds' => true,
-    'hideCookieBanners' => true
+    'blockTrackers' => true,
+    'blockCookieBanners' => true,
+    'blockChatWidgets' => true // Blocks Intercom, Drift, Zendesk, etc.
 ]);
+```
+
+### Thumbnail Generation
+
+```php
+$result = $client->screenshot([
+    'url' => 'https://example.com',
+    'thumbnail' => [
+        'enabled' => true,
+        'width' => 300,
+        'height' => 200,
+        'fit' => 'cover' // 'cover', 'contain', or 'fill'
+    ],
+    'responseType' => 'json'
+]);
+
+// Access both full image and thumbnail
+$fullImage = base64_decode($result['data']);
+$thumbnail = base64_decode($result['thumbnail']);
+```
+
+### Fail on HTTP Errors
+
+```php
+try {
+    $screenshot = $client->screenshot([
+        'url' => 'https://example.com/404-page',
+        'failOnHttpError' => true // Will throw if page returns 4xx or 5xx
+    ]);
+} catch (SnapAPIException $e) {
+    echo "Page returned HTTP error";
+}
 ```
 
 ### Custom JavaScript Execution
@@ -99,6 +227,18 @@ $screenshot = $client->screenshot([
     'url' => 'https://example.com',
     'javascript' => "document.querySelector('.popup')?.remove();",
     'delay' => 1000
+]);
+```
+
+### Custom CSS
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'css' => '
+        body { background: #f0f0f0 !important; }
+        .ads, .banner { display: none !important; }
+    '
 ]);
 ```
 
@@ -117,19 +257,74 @@ $screenshot = $client->screenshot([
 ]);
 ```
 
+### HTTP Basic Authentication
+
+```php
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com/protected',
+    'httpAuth' => [
+        'username' => 'user',
+        'password' => 'pass'
+    ]
+]);
+```
+
+### Element Screenshot with Clipping
+
+```php
+// Capture specific element
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'selector' => '.hero-section'
+]);
+
+// Or use manual clipping
+$screenshot = $client->screenshot([
+    'url' => 'https://example.com',
+    'clipX' => 100,
+    'clipY' => 100,
+    'clipWidth' => 500,
+    'clipHeight' => 300
+]);
+```
+
+### Extract Metadata
+
+```php
+$result = $client->screenshot([
+    'url' => 'https://example.com',
+    'responseType' => 'json',
+    'includeMetadata' => true,
+    'extractMetadata' => [
+        'fonts' => true,
+        'colors' => true,
+        'links' => true,
+        'httpStatusCode' => true
+    ]
+]);
+
+echo "Title: " . $result['metadata']['title'];
+echo "HTTP Status: " . $result['metadata']['httpStatusCode'];
+print_r($result['metadata']['fonts']); // List of fonts used
+print_r($result['metadata']['colors']); // Dominant colors
+print_r($result['metadata']['links']); // All links on page
+```
+
 ### Get JSON Response with Metadata
 
 ```php
 $result = $client->screenshot([
     'url' => 'https://example.com',
-    'responseType' => 'json'
+    'responseType' => 'json',
+    'includeMetadata' => true
 ]);
 
 echo $result['width'];     // 1920
 echo $result['height'];    // 1080
 echo $result['fileSize'];  // 45321
-echo $result['duration'];  // 523
+echo $result['took'];      // 523 (milliseconds)
 echo $result['data'];      // base64 encoded image
+print_r($result['metadata']); // Page metadata
 ```
 
 ### Batch Screenshots
@@ -145,13 +340,27 @@ $batch = $client->batch([
     'webhookUrl' => 'https://your-server.com/webhook'
 ]);
 
-echo $batch['jobId']; // 'job_abc123'
+echo $batch['jobId']; // 'batch_abc123'
 
 // Check status later
 $status = $client->getBatchStatus($batch['jobId']);
 if ($status['status'] === 'completed') {
-    print_r($status['results']);
+    foreach ($status['results'] as $result) {
+        if ($result['status'] === 'completed') {
+            file_put_contents(
+                basename(parse_url($result['url'], PHP_URL_HOST)) . '.png',
+                base64_decode($result['data'])
+            );
+        }
+    }
 }
+```
+
+### Get API Capabilities
+
+```php
+$capabilities = $client->getCapabilities();
+print_r($capabilities['capabilities']['features']);
 ```
 
 ## Configuration Options
@@ -161,32 +370,82 @@ if ($status['status'] === 'completed') {
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
 | `apiKey` | string | *required* | Your API key |
-| `baseUrl` | string | `https://api.snapapi.dev` | API base URL |
+| `baseUrl` | string | `https://api.snapapi.pics` | API base URL |
 | `timeout` | int | `60` | Request timeout in seconds |
 
 ### Screenshot Options
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `url` | string | *required* | URL to capture |
+| `url` | string | - | URL to capture (required if no html) |
+| `html` | string | - | HTML content to render (required if no url) |
 | `format` | string | `'png'` | `'png'`, `'jpeg'`, `'webp'`, `'pdf'` |
-| `width` | int | `1920` | Viewport width (100-3840) |
-| `height` | int | `1080` | Viewport height (100-2160) |
-| `fullPage` | bool | `false` | Capture full scrollable page |
 | `quality` | int | `80` | Image quality 1-100 (JPEG/WebP) |
-| `scale` | float | `1.0` | Device scale factor 0.5-3 |
-| `delay` | int | `0` | Delay before capture (0-10000ms) |
+| `device` | string | - | Device preset name |
+| `width` | int | `1280` | Viewport width (100-3840) |
+| `height` | int | `800` | Viewport height (100-2160) |
+| `deviceScaleFactor` | float | `1` | Device pixel ratio (1-3) |
+| `isMobile` | bool | `false` | Emulate mobile device |
+| `hasTouch` | bool | `false` | Enable touch events |
+| `isLandscape` | bool | `false` | Landscape orientation |
+| `fullPage` | bool | `false` | Capture full scrollable page |
+| `fullPageScrollDelay` | int | `400` | Delay between scroll steps (ms) |
+| `fullPageMaxHeight` | int | - | Max height for full page (px) |
+| `selector` | string | - | CSS selector for element capture |
+| `clipX`, `clipY` | int | - | Clip region position |
+| `clipWidth`, `clipHeight` | int | - | Clip region size |
+| `delay` | int | `0` | Delay before capture (0-30000ms) |
 | `timeout` | int | `30000` | Max wait time (1000-60000ms) |
+| `waitUntil` | string | `'load'` | `'load'`, `'domcontentloaded'`, `'networkidle'` |
+| `waitForSelector` | string | - | Wait for element before capture |
 | `darkMode` | bool | `false` | Emulate dark mode |
-| `mobile` | bool | `false` | Emulate mobile device |
-| `selector` | string | `null` | CSS selector for element capture |
-| `waitForSelector` | string | `null` | Wait for element before capture |
-| `javascript` | string | `null` | JS to execute before capture |
-| `blockAds` | bool | `false` | Block ads and trackers |
-| `hideCookieBanners` | bool | `false` | Hide cookie banners |
-| `cookies` | array | `null` | Cookies to set |
-| `headers` | array | `null` | Custom HTTP headers |
+| `reducedMotion` | bool | `false` | Reduce animations |
+| `css` | string | - | Custom CSS to inject |
+| `javascript` | string | - | JS to execute before capture |
+| `hideSelectors` | array | - | CSS selectors to hide |
+| `clickSelector` | string | - | Element to click before capture |
+| `clickDelay` | int | - | Delay after click (ms) |
+| `blockAds` | bool | `false` | Block ads |
+| `blockTrackers` | bool | `false` | Block trackers |
+| `blockCookieBanners` | bool | `false` | Hide cookie banners |
+| `blockChatWidgets` | bool | `false` | Block chat widgets |
+| `blockResources` | array | - | Resource types to block |
+| `userAgent` | string | - | Custom User-Agent |
+| `extraHeaders` | array | - | Custom HTTP headers |
+| `cookies` | array | - | Cookies to set |
+| `httpAuth` | array | - | HTTP basic auth credentials |
+| `proxy` | array | - | Proxy configuration |
+| `geolocation` | array | - | Geolocation coordinates |
+| `timezone` | string | - | Timezone (e.g., 'America/New_York') |
+| `locale` | string | - | Locale (e.g., 'en-US') |
+| `pdfOptions` | array | - | PDF generation options |
+| `thumbnail` | array | - | Thumbnail generation options |
+| `failOnHttpError` | bool | `false` | Fail on 4xx/5xx responses |
+| `cache` | bool | `false` | Enable caching |
+| `cacheTtl` | int | `86400` | Cache TTL in seconds |
 | `responseType` | string | `'binary'` | `'binary'`, `'base64'`, `'json'` |
+| `includeMetadata` | bool | `false` | Include page metadata |
+| `extractMetadata` | array | - | Additional metadata to extract |
+
+### PDF Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `pageSize` | string | `'a4'` | `'a4'`, `'a3'`, `'a5'`, `'letter'`, `'legal'`, `'tabloid'`, `'custom'` |
+| `width` | string | - | Custom width (e.g., '210mm') |
+| `height` | string | - | Custom height (e.g., '297mm') |
+| `landscape` | bool | `false` | Landscape orientation |
+| `marginTop` | string | - | Top margin (e.g., '20mm') |
+| `marginRight` | string | - | Right margin |
+| `marginBottom` | string | - | Bottom margin |
+| `marginLeft` | string | - | Left margin |
+| `printBackground` | bool | `true` | Print background graphics |
+| `headerTemplate` | string | - | HTML template for header |
+| `footerTemplate` | string | - | HTML template for footer |
+| `displayHeaderFooter` | bool | `false` | Show header/footer |
+| `scale` | float | `1` | Scale (0.1-2) |
+| `pageRanges` | string | - | Page ranges (e.g., '1-5') |
+| `preferCSSPageSize` | bool | `false` | Use CSS page size |
 
 ## Error Handling
 
@@ -216,6 +475,7 @@ try {
 | `RATE_LIMITED` | 429 | Too many requests |
 | `TIMEOUT` | 504 | Page took too long to load |
 | `CAPTURE_FAILED` | 500 | Screenshot capture failed |
+| `HTTP_ERROR` | varies | Page returned HTTP error (with failOnHttpError) |
 
 ## License
 

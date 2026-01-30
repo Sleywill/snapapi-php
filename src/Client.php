@@ -16,9 +16,9 @@ use SnapAPI\Exception\SnapAPIException;
  */
 class Client
 {
-    private const DEFAULT_BASE_URL = 'https://api.snapapi.dev';
+    private const DEFAULT_BASE_URL = 'https://api.snapapi.pics';
     private const DEFAULT_TIMEOUT = 60;
-    private const USER_AGENT = 'snapapi-php/1.0.0';
+    private const USER_AGENT = 'snapapi-php/1.1.0';
 
     private string $apiKey;
     private string $baseUrl;
@@ -45,39 +45,201 @@ class Client
      * Capture a screenshot of the specified URL.
      *
      * @param array{
-     *     url: string,
+     *     url?: string,
+     *     html?: string,
      *     format?: string,
+     *     quality?: int,
+     *     device?: string,
      *     width?: int,
      *     height?: int,
+     *     deviceScaleFactor?: float,
+     *     isMobile?: bool,
+     *     hasTouch?: bool,
+     *     isLandscape?: bool,
      *     fullPage?: bool,
-     *     quality?: int,
-     *     scale?: float,
+     *     fullPageScrollDelay?: int,
+     *     fullPageMaxHeight?: int,
+     *     selector?: string,
+     *     selectorScrollIntoView?: bool,
+     *     clipX?: int,
+     *     clipY?: int,
+     *     clipWidth?: int,
+     *     clipHeight?: int,
      *     delay?: int,
      *     timeout?: int,
-     *     darkMode?: bool,
-     *     mobile?: bool,
-     *     selector?: string,
+     *     waitUntil?: string,
      *     waitForSelector?: string,
+     *     waitForSelectorTimeout?: int,
+     *     darkMode?: bool,
+     *     reducedMotion?: bool,
+     *     css?: string,
      *     javascript?: string,
+     *     hideSelectors?: array,
+     *     clickSelector?: string,
+     *     clickDelay?: int,
      *     blockAds?: bool,
-     *     hideCookieBanners?: bool,
+     *     blockTrackers?: bool,
+     *     blockCookieBanners?: bool,
+     *     blockChatWidgets?: bool,
+     *     blockResources?: array,
+     *     userAgent?: string,
+     *     extraHeaders?: array,
      *     cookies?: array,
-     *     headers?: array,
-     *     responseType?: string
+     *     httpAuth?: array,
+     *     proxy?: array,
+     *     geolocation?: array,
+     *     timezone?: string,
+     *     locale?: string,
+     *     pdfOptions?: array,
+     *     thumbnail?: array,
+     *     failOnHttpError?: bool,
+     *     cache?: bool,
+     *     cacheTtl?: int,
+     *     responseType?: string,
+     *     includeMetadata?: bool,
+     *     extractMetadata?: array,
+     *     failIfContentMissing?: array<string>,
+     *     failIfContentContains?: array<string>
      * } $options Screenshot options
      * @return string|array Binary image data or array if responseType is 'json'
      * @throws SnapAPIException
      */
     public function screenshot(array $options)
     {
-        if (empty($options['url'])) {
-            throw new \InvalidArgumentException('URL is required');
+        if (empty($options['url']) && empty($options['html'])) {
+            throw new \InvalidArgumentException('Either URL or HTML is required');
         }
 
         $responseType = $options['responseType'] ?? 'binary';
         $response = $this->request('POST', '/v1/screenshot', $options);
 
-        if ($responseType === 'json') {
+        if ($responseType === 'json' || $responseType === 'base64') {
+            return json_decode($response, true);
+        }
+
+        return $response;
+    }
+
+    /**
+     * Capture a screenshot from HTML content.
+     *
+     * @param string $html HTML content to render
+     * @param array $options Additional screenshot options
+     * @return string|array Binary image data or array if responseType is 'json'
+     * @throws SnapAPIException
+     */
+    public function screenshotFromHtml(string $html, array $options = [])
+    {
+        $options['html'] = $html;
+        return $this->screenshot($options);
+    }
+
+    /**
+     * Capture a screenshot using a device preset.
+     *
+     * @param string $url URL to capture
+     * @param string $device Device preset name (e.g., 'iphone-15-pro', 'ipad-pro-12.9')
+     * @param array $options Additional screenshot options
+     * @return string|array Binary image data or array if responseType is 'json'
+     * @throws SnapAPIException
+     */
+    public function screenshotDevice(string $url, string $device, array $options = [])
+    {
+        $options['url'] = $url;
+        $options['device'] = $device;
+        return $this->screenshot($options);
+    }
+
+    /**
+     * Generate a PDF from a URL.
+     *
+     * @param array{
+     *     url?: string,
+     *     html?: string,
+     *     pdfOptions?: array{
+     *         pageSize?: string,
+     *         width?: string,
+     *         height?: string,
+     *         landscape?: bool,
+     *         marginTop?: string,
+     *         marginRight?: string,
+     *         marginBottom?: string,
+     *         marginLeft?: string,
+     *         printBackground?: bool,
+     *         headerTemplate?: string,
+     *         footerTemplate?: string,
+     *         displayHeaderFooter?: bool,
+     *         scale?: float,
+     *         pageRanges?: string,
+     *         preferCSSPageSize?: bool
+     *     },
+     *     timeout?: int,
+     *     waitUntil?: string,
+     *     cookies?: array,
+     *     headers?: array,
+     *     httpAuth?: array
+     * } $options PDF options
+     * @return string Binary PDF data
+     * @throws SnapAPIException
+     */
+    public function pdf(array $options): string
+    {
+        if (empty($options['url']) && empty($options['html'])) {
+            throw new \InvalidArgumentException('Either URL or HTML is required');
+        }
+
+        $options['format'] = 'pdf';
+        $options['responseType'] = $options['responseType'] ?? 'binary';
+
+        return $this->request('POST', '/v1/pdf', $options);
+    }
+
+    /**
+     * Capture a video of a webpage with optional scroll animation.
+     *
+     * @param array{
+     *     url: string,
+     *     format?: string,
+     *     quality?: int,
+     *     width?: int,
+     *     height?: int,
+     *     device?: string,
+     *     duration?: int,
+     *     fps?: int,
+     *     delay?: int,
+     *     timeout?: int,
+     *     waitUntil?: string,
+     *     waitForSelector?: string,
+     *     darkMode?: bool,
+     *     blockAds?: bool,
+     *     blockCookieBanners?: bool,
+     *     css?: string,
+     *     javascript?: string,
+     *     hideSelectors?: array,
+     *     userAgent?: string,
+     *     cookies?: array,
+     *     responseType?: string,
+     *     scroll?: bool,
+     *     scrollDelay?: int,
+     *     scrollDuration?: int,
+     *     scrollBy?: int,
+     *     scrollEasing?: string,
+     *     scrollBack?: bool,
+     *     scrollComplete?: bool
+     * } $options Video options
+     * @return string|array Binary video data or array if responseType is 'json'
+     * @throws SnapAPIException
+     */
+    public function video(array $options)
+    {
+        if (empty($options['url'])) {
+            throw new \InvalidArgumentException('URL is required');
+        }
+
+        $responseType = $options['responseType'] ?? 'binary';
+        $response = $this->request('POST', '/v1/video', $options);
+
+        if ($responseType === 'json' || $responseType === 'base64') {
             return json_decode($response, true);
         }
 
@@ -90,12 +252,14 @@ class Client
      * @param array{
      *     urls: array<string>,
      *     format?: string,
+     *     quality?: int,
      *     width?: int,
      *     height?: int,
      *     fullPage?: bool,
      *     webhookUrl?: string,
      *     darkMode?: bool,
-     *     blockAds?: bool
+     *     blockAds?: bool,
+     *     blockCookieBanners?: bool
      * } $options Batch options
      * @return array Batch job result
      * @throws SnapAPIException
@@ -120,6 +284,30 @@ class Client
     public function getBatchStatus(string $jobId): array
     {
         $response = $this->request('GET', "/v1/screenshot/batch/{$jobId}");
+        return json_decode($response, true);
+    }
+
+    /**
+     * Get available device presets.
+     *
+     * @return array Device presets grouped by category
+     * @throws SnapAPIException
+     */
+    public function getDevices(): array
+    {
+        $response = $this->request('GET', '/v1/devices');
+        return json_decode($response, true);
+    }
+
+    /**
+     * Get API capabilities and features.
+     *
+     * @return array API capabilities
+     * @throws SnapAPIException
+     */
+    public function getCapabilities(): array
+    {
+        $response = $this->request('GET', '/v1/capabilities');
         return json_decode($response, true);
     }
 
