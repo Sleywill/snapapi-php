@@ -11,7 +11,7 @@ Official PHP SDK for [SnapAPI](https://snapapi.pics) - Lightning-fast screenshot
 ## Installation
 
 ```bash
-composer require snapapi/sdk
+composer require sleywill/snapapi-php
 ```
 
 ## Quick Start
