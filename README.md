@@ -480,3 +480,32 @@ try {
 ## License
 
 MIT
+
+### Extract API
+
+Extract clean content from any webpage - perfect for LLM/RAG workflows.
+
+```php
+// Extract markdown
+$result = $client->extractMarkdown('https://example.com/article');
+echo $result['data'];
+
+// Extract article with metadata
+$article = $client->extractArticle('https://blog.example.com');
+echo $article['data']['title'];
+echo $article['data']['content'];
+
+// Extract structured data for LLM
+$structured = $client->extractStructured('https://example.com');
+echo $structured['data']['wordCount'];
+
+// Extract with full options
+$result = $client->extract([
+    'url' => 'https://example.com',
+    'type' => 'markdown',
+    'blockAds' => true,
+    'maxLength' => 5000
+]);
+```
+
+Available types: `markdown`, `text`, `html`, `article`, `structured`, `links`, `images`, `metadata`

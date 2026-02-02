@@ -332,6 +332,93 @@ class Client
      * @return string Response body
      * @throws SnapAPIException
      */
+
+    /**
+     * Extract content from a webpage.
+     *
+     * @param array{
+     *     url: string,
+     *     type?: string,
+     *     selector?: string,
+     *     waitFor?: string,
+     *     timeout?: int,
+     *     darkMode?: bool,
+     *     blockAds?: bool,
+     *     blockCookieBanners?: bool,
+     *     maxLength?: int,
+     *     cleanOutput?: bool
+     * } $options Extract options
+     * @return array{success: bool, type: string, url: string, data: mixed, responseTime: int}
+     */
+    public function extract(array $options): array
+    {
+        if (empty($options['url'])) {
+            throw new \InvalidArgumentException('URL is required');
+        }
+
+        if (!isset($options['type'])) {
+            $options['type'] = 'markdown';
+        }
+
+        return $this->request('POST', '/v1/extract', $options);
+    }
+
+    /**
+     * Extract markdown from a webpage.
+     */
+    public function extractMarkdown(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'markdown']));
+    }
+
+    /**
+     * Extract article content from a webpage.
+     */
+    public function extractArticle(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'article']));
+    }
+
+    /**
+     * Extract structured data for LLM/RAG workflows.
+     */
+    public function extractStructured(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'structured']));
+    }
+
+    /**
+     * Extract plain text from a webpage.
+     */
+    public function extractText(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'text']));
+    }
+
+    /**
+     * Extract all links from a webpage.
+     */
+    public function extractLinks(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'links']));
+    }
+
+    /**
+     * Extract all images from a webpage.
+     */
+    public function extractImages(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'images']));
+    }
+
+    /**
+     * Extract page metadata from a webpage.
+     */
+    public function extractMetadata(string $url, array $options = []): array
+    {
+        return $this->extract(array_merge($options, ['url' => $url, 'type' => 'metadata']));
+    }
+
     private function request(string $method, string $path, ?array $data = null): string
     {
         $url = $this->baseUrl . $path;
