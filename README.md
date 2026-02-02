@@ -10,8 +10,26 @@ Official PHP SDK for [SnapAPI](https://snapapi.pics) - Lightning-fast screenshot
 
 ## Installation
 
+Add to your `composer.json`:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/Sleywill/snapapi-php"
+        }
+    ],
+    "require": {
+        "snapapi/sdk": "dev-main"
+    }
+}
+```
+
+Then run:
+
 ```bash
-composer require sleywill/snapapi-php
+composer update
 ```
 
 ## Quick Start
