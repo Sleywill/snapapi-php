@@ -557,13 +557,24 @@ class Client
     private function handleError(string $response, int $httpCode): void
     {
         $body = json_decode($response, true);
-        $error = $body['error'] ?? [];
+
+        // The API returns errors in the format:
+        // { "statusCode": 400, "error": "Validation Error", "message": "...", "details": [...] }
+        // where "error" is a string label, not a nested object.
+        $message = $body['message'] ?? "HTTP {$httpCode}";
+        $code = $body['error'] ?? 'HTTP_ERROR';
+
+        // Normalize the error code to UPPER_SNAKE_CASE:
+        // "Validation Error" -> "VALIDATION_ERROR", "Unauthorized" -> "UNAUTHORIZED"
+        if (is_string($code)) {
+            $code = strtoupper(str_replace(' ', '_', $code));
+        }
 
         throw new SnapAPIException(
-            $error['message'] ?? "HTTP {$httpCode}",
-            $error['code'] ?? 'HTTP_ERROR',
+            $message,
+            $code,
             $httpCode,
-            $error['details'] ?? null
+            $body['details'] ?? null
         );
     }
 }
