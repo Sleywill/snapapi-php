@@ -455,6 +455,30 @@ $result = $client->analyze([
 echo $result['analysis'];
 ```
 
+### Ping
+
+```php
+$result = $client->ping();
+echo $result['status']; // 'ok'
+```
+
+### Async Screenshots
+
+Capture screenshots asynchronously and poll for results:
+
+```php
+// Start async screenshot
+$job = $client->screenshotAsync(['url' => 'https://example.com']);
+echo $job['jobId']; // 'abc123'
+
+// Poll for status
+$status = $client->getScreenshotStatus($job['jobId']);
+if ($status['status'] === 'completed') {
+    $imageData = base64_decode($status['data']);
+    file_put_contents('screenshot.png', $imageData);
+}
+```
+
 ### Get API Capabilities
 
 ```php

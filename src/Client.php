@@ -18,7 +18,7 @@ class Client
 {
     private const DEFAULT_BASE_URL = 'https://api.snapapi.pics';
     private const DEFAULT_TIMEOUT = 60;
-    private const USER_AGENT = 'snapapi-php/1.2.0';
+    private const USER_AGENT = 'snapapi-php/1.3.0';
 
     private string $apiKey;
     private string $baseUrl;
@@ -441,6 +441,49 @@ class Client
     }
 
     /**
+     * Ping the API to check connectivity.
+     *
+     * @return array Ping response
+     * @throws SnapAPIException
+     */
+    public function ping(): array
+    {
+        $response = $this->request('GET', '/v1/ping');
+        return json_decode($response, true);
+    }
+
+    /**
+     * Capture a screenshot asynchronously.
+     *
+     * @param array $options Screenshot options (same as screenshot())
+     * @return array Job info with jobId for polling
+     * @throws SnapAPIException
+     */
+    public function screenshotAsync(array $options): array
+    {
+        if (empty($options['url']) && empty($options['html']) && empty($options['markdown'])) {
+            throw new \InvalidArgumentException('Either URL, HTML, or Markdown is required');
+        }
+
+        $options['async'] = true;
+        $response = $this->request('POST', '/v1/screenshot', $options);
+        return json_decode($response, true);
+    }
+
+    /**
+     * Poll for an async screenshot job status.
+     *
+     * @param string $jobId The job ID returned from screenshotAsync()
+     * @return array Job status and result
+     * @throws SnapAPIException
+     */
+    public function getScreenshotStatus(string $jobId): array
+    {
+        $response = $this->request('GET', "/v1/screenshot/async/{$jobId}");
+        return json_decode($response, true);
+    }
+
+    /**
      * Analyze a webpage using AI vision.
      *
      * @param array{
@@ -477,6 +520,8 @@ class Client
             throw new \InvalidArgumentException('URL is required');
         }
 
+        // The /v1/analyze endpoint requires apiKey in the request body
+        $options['apiKey'] = $this->apiKey;
         $response = $this->request('POST', '/v1/analyze', $options);
         return json_decode($response, true);
     }
