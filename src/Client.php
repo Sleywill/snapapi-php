@@ -18,7 +18,7 @@ class Client
 {
     private const DEFAULT_BASE_URL = 'https://api.snapapi.pics';
     private const DEFAULT_TIMEOUT = 60;
-    private const USER_AGENT = 'snapapi-php/1.3.0';
+    private const USER_AGENT = 'snapapi-php/1.3.1';
 
     private string $apiKey;
     private string $baseUrl;
