@@ -1,17 +1,12 @@
 {
     "name": "snapapi/sdk",
-    "description": "Official PHP SDK for SnapAPI - Lightning-fast screenshot API",
-    "version": "1.3.1",
+    "description": "Official PHP SDK for SnapAPI — screenshot, scrape, extract, and analyze webpages",
+    "version": "2.0.0",
     "type": "library",
     "license": "MIT",
     "keywords": [
-        "screenshot",
-        "api",
-        "webpage",
-        "capture",
-        "url-to-image",
-        "web-screenshot",
-        "snapapi"
+        "screenshot", "api", "webpage", "capture", "url-to-image",
+        "scrape", "extract", "pdf", "snapapi"
     ],
     "authors": [
         {
@@ -25,12 +20,12 @@
         "source": "https://github.com/Sleywill/snapapi-php"
     },
     "require": {
-        "php": ">=7.4",
+        "php": ">=8.0",
         "ext-json": "*",
         "ext-curl": "*"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.0",
+        "phpunit/phpunit": "^10.0",
         "phpstan/phpstan": "^1.0"
     },
     "autoload": {
