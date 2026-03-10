@@ -495,6 +495,85 @@ class SnapAPI
      * @return string Raw response body
      * @throws SnapAPIException
      */
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Video  POST /v1/video
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Record a video (WebM/MP4/GIF) of a live webpage.
+     *
+     * Returns raw binary video bytes when $options['responseType'] is 'binary'
+     * (the default). Returns an associative array with metadata when
+     * $options['responseType'] is 'base64' or 'json'.
+     *
+     * @param array{
+     *   url: string,
+     *   format?: string,
+     *   width?: int,
+     *   height?: int,
+     *   duration?: int,
+     *   fps?: int,
+     *   scrolling?: bool,
+     *   scrollSpeed?: int,
+     *   scrollDelay?: int,
+     *   scrollDuration?: int,
+     *   scrollBy?: int,
+     *   scrollEasing?: string,
+     *   scrollBack?: bool,
+     *   scrollComplete?: bool,
+     *   darkMode?: bool,
+     *   blockAds?: bool,
+     *   blockCookieBanners?: bool,
+     *   delay?: int,
+     *   responseType?: string
+     * } $options
+     * @return string|array Binary video bytes, or decoded JSON array when responseType is 'base64'/'json'.
+     * @throws SnapAPIException
+     */
+    public function video(array $options): string|array
+    {
+        if (empty($options['url'])) {
+            throw new \InvalidArgumentException('url is required.');
+        }
+        $raw = $this->request('POST', '/v1/video', $options);
+        $responseType = $options['responseType'] ?? 'binary';
+        if ($responseType === 'json' || $responseType === 'base64') {
+            return json_decode($raw, true);
+        }
+        return $raw;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Ping  GET /v1/ping
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Check API availability.
+     *
+     * @return array{status: string, timestamp: int}
+     * @throws SnapAPIException
+     */
+    public function ping(): array
+    {
+        return $this->requestJson('GET', '/v1/ping');
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Account Usage  GET /v1/usage
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Get your account-level API usage for the current billing period.
+     *
+     * @return array{used: int, limit: int, remaining: int, resetAt?: string}
+     * @throws SnapAPIException
+     */
+    public function usage(): array
+    {
+        return $this->requestJson('GET', '/v1/usage');
+    }
+
     private function request(string $method, string $path, ?array $data = null): string
     {
         $ch = curl_init($this->baseUrl . $path);
