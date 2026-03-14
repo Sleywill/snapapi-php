@@ -100,7 +100,7 @@ class Client
      *   wait?: int,
      * } $options
      *
-     * @return array{success: bool, url: string, html?: string, text?: string}
+     * @return array<string, mixed> Keys: success, url, html?, text?
      * @throws SnapAPIException
      */
     public function scrape(array $options): array
@@ -124,7 +124,7 @@ class Client
      *   wait?: int,
      * } $options  format: "markdown" (default), "text", or "json"
      *
-     * @return array{success: bool, url: string, format: string, content: string, responseTime: int}
+     * @return array<string, mixed> Keys: success, url, format, content, responseTime
      * @throws SnapAPIException
      */
     public function extract(array $options): array
@@ -192,7 +192,7 @@ class Client
     /**
      * Return the caller's current API quota usage.
      *
-     * @return array{used: int, total: int, remaining: int, resetAt?: string}
+     * @return array<string, mixed> Keys: used, total, remaining, resetAt?
      * @throws SnapAPIException
      */
     public function quota(): array
