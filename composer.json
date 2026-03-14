@@ -1,17 +1,17 @@
 {
     "name": "snapapi/sdk",
-    "description": "Official PHP SDK for SnapAPI — screenshot, scrape, extract, and analyze webpages",
-    "version": "2.0.0",
+    "description": "Official PHP SDK for SnapAPI.pics — screenshot, PDF, scrape, extract, and video capture from any URL",
+    "version": "3.0.0",
     "type": "library",
     "license": "MIT",
     "keywords": [
         "screenshot", "api", "webpage", "capture", "url-to-image",
-        "scrape", "extract", "pdf", "snapapi"
+        "scrape", "extract", "pdf", "video", "snapapi"
     ],
     "authors": [
         {
             "name": "SnapAPI",
-            "email": "support@snapapi.dev"
+            "email": "support@snapapi.pics"
         }
     ],
     "homepage": "https://snapapi.pics",
@@ -20,7 +20,7 @@
         "source": "https://github.com/Sleywill/snapapi-php"
     },
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "ext-json": "*",
         "ext-curl": "*"
     },
@@ -40,7 +40,7 @@
     },
     "scripts": {
         "test": "phpunit",
-        "analyse": "phpstan analyse src"
+        "analyse": "phpstan analyse src --level=8"
     },
     "config": {
         "sort-packages": true
