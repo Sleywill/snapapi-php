@@ -47,7 +47,7 @@ class Client
         }
 
         $this->http = new HttpClient(
-            baseUrl: rtrim($options['baseUrl'] ?? 'https://snapapi.pics', '/'),
+            baseUrl: rtrim($options['baseUrl'] ?? 'https://api.snapapi.pics', '/'),
             apiKey: $apiKey,
             timeout: $options['timeout'] ?? 30,
             retries: $options['retries'] ?? 3,
