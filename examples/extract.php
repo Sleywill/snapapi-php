@@ -21,7 +21,7 @@ try {
         'format' => 'markdown',
     ]);
 
-    echo "Extracted (format={$result['format']}, {$result['responseTime']}ms):\n\n";
+    echo "Extracted ({$result['word_count']} words):\n\n";
     echo $result['content'] . "\n";
 
 } catch (SnapAPIException $e) {

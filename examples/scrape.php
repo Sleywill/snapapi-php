@@ -17,12 +17,13 @@ $client = new Client($apiKey);
 
 try {
     $result = $client->scrape([
-        'url' => 'https://example.com',
+        'url'    => 'https://example.com',
+        'format' => 'html',
     ]);
 
-    echo "URL: {$result['url']}\n";
-    echo 'Text (' . strlen($result['text'] ?? '') . " chars):\n";
-    echo ($result['text'] ?? '') . "\n";
+    echo "URL: {$result['url']} (status {$result['status']})\n";
+    echo 'Data (' . strlen($result['data'] ?? '') . " chars):\n";
+    echo ($result['data'] ?? '') . "\n";
 
 } catch (SnapAPIException $e) {
     fwrite(STDERR, "[{$e->getErrorCode()}] {$e->getMessage()}\n");

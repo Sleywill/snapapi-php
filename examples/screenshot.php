@@ -21,6 +21,7 @@ $client = new Client($apiKey, [
 ]);
 
 try {
+    // Take a full-page screenshot
     $image = $client->screenshot([
         'url'       => 'https://example.com',
         'format'    => 'png',
@@ -32,9 +33,17 @@ try {
     file_put_contents('screenshot.png', $image);
     echo 'Saved screenshot.png (' . strlen($image) . " bytes)\n";
 
-    // Show quota usage
-    $quota = $client->quota();
-    echo "Quota: {$quota['used']} used / {$quota['total']} total ({$quota['remaining']} remaining)\n";
+    // Or use the convenience method
+    $bytes = $client->screenshotToFile('screenshot2.png', [
+        'url'       => 'https://example.com',
+        'format'    => 'png',
+        'block_ads' => true,
+    ]);
+    echo "Saved screenshot2.png ({$bytes} bytes)\n";
+
+    // Show usage
+    $usage = $client->getUsage();
+    echo "Usage: {$usage['used']} used / {$usage['total']} total ({$usage['remaining']} remaining)\n";
 
 } catch (RateLimitException $e) {
     fwrite(STDERR, "Rate limited. Retry after {$e->getRetryAfter()} seconds.\n");

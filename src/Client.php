@@ -9,18 +9,18 @@ use SnapAPI\Exceptions\ValidationException;
 use SnapAPI\Http\HttpClient;
 
 /**
- * SnapAPI PHP SDK v3 — Official client.
+ * SnapAPI PHP SDK v2.1.0 -- Official client.
  *
- * Supports: Screenshot, PDF, Scrape, Extract, Video, Quota.
+ * Supports: Screenshot, PDF, Scrape, Extract, Analyze, Video, Usage.
  *
  * ```php
- * $client = new \SnapAPI\Client('sk_...');
+ * $client = new \SnapAPI\Client('sk_live_...');
  *
  * $png = $client->screenshot(['url' => 'https://example.com', 'format' => 'png']);
  * file_put_contents('screenshot.png', $png);
  *
- * $quota = $client->quota();
- * echo "Used: {$quota['used']}/{$quota['total']}";
+ * $usage = $client->getUsage();
+ * echo "Used: {$usage['used']}/{$usage['total']}";
  * ```
  */
 class Client
@@ -30,7 +30,7 @@ class Client
     /**
      * Create a new SnapAPI client.
      *
-     * @param string $apiKey Your SnapAPI key.
+     * @param string $apiKey Your SnapAPI key (e.g. "sk_live_...").
      * @param array{
      *     baseUrl?: string,
      *     timeout?: int,
@@ -47,7 +47,7 @@ class Client
         }
 
         $this->http = new HttpClient(
-            baseUrl: rtrim($options['baseUrl'] ?? 'https://snapapi.pics', '/'),
+            baseUrl: rtrim($options['baseUrl'] ?? 'https://api.snapapi.pics', '/'),
             apiKey: $apiKey,
             timeout: $options['timeout'] ?? 30,
             retries: $options['retries'] ?? 3,
@@ -62,7 +62,7 @@ class Client
     /**
      * Capture a screenshot of a URL.
      *
-     * Returns raw binary image bytes (PNG or JPEG).
+     * Returns raw binary image bytes (PNG, JPEG, WebP, or PDF).
      *
      * @param array{
      *   url: string,
@@ -70,9 +70,19 @@ class Client
      *   width?: int,
      *   height?: int,
      *   full_page?: bool,
-     *   wait?: int,
      *   delay?: int,
      *   quality?: int,
+     *   scale?: float,
+     *   block_ads?: bool,
+     *   wait_for_selector?: string,
+     *   clip?: array{x: int, y: int, w: int, h: int},
+     *   scroll_y?: int,
+     *   custom_css?: string,
+     *   custom_js?: string,
+     *   headers?: array<string, string>,
+     *   user_agent?: string,
+     *   proxy?: string,
+     *   access_key?: string,
      *   selector?: string,
      * } $options
      *
@@ -87,6 +97,25 @@ class Client
         return $this->http->post('/v1/screenshot', $options);
     }
 
+    /**
+     * Capture a screenshot and save it directly to a file.
+     *
+     * @param string $filename Path to write the file.
+     * @param array<string, mixed> $options Same as screenshot().
+     *
+     * @return int Number of bytes written.
+     * @throws SnapAPIException
+     */
+    public function screenshotToFile(string $filename, array $options): int
+    {
+        $data = $this->screenshot($options);
+        $bytes = file_put_contents($filename, $data);
+        if ($bytes === false) {
+            throw new SnapAPIException("Failed to write file: {$filename}", 'FILE_ERROR', 0);
+        }
+        return $bytes;
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Scrape  POST /v1/scrape
     // ──────────────────────────────────────────────────────────────────────────
@@ -97,10 +126,14 @@ class Client
      * @param array{
      *   url: string,
      *   selector?: string,
-     *   wait?: int,
-     * } $options
+     *   format?: string,
+     *   wait_for_selector?: string,
+     *   headers?: array<string, string>,
+     *   proxy?: string,
+     *   access_key?: string,
+     * } $options  format: "html" (default), "text", or "json"
      *
-     * @return array<string, mixed> Keys: success, url, html?, text?
+     * @return array{data: string, url: string, status: int}
      * @throws SnapAPIException
      */
     public function scrape(array $options): array
@@ -121,10 +154,16 @@ class Client
      * @param array{
      *   url: string,
      *   format?: string,
-     *   wait?: int,
+     *   include_links?: bool,
+     *   include_images?: bool,
+     *   selector?: string,
+     *   wait_for_selector?: string,
+     *   headers?: array<string, string>,
+     *   proxy?: string,
+     *   access_key?: string,
      * } $options  format: "markdown" (default), "text", or "json"
      *
-     * @return array<string, mixed> Keys: success, url, format, content, responseTime
+     * @return array{content: string, url: string, word_count: int}
      * @throws SnapAPIException
      */
     public function extract(array $options): array
@@ -133,6 +172,34 @@ class Client
             throw new ValidationException('url is required.');
         }
         return $this->decodeJson($this->http->post('/v1/extract', $options));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Analyze  POST /v1/analyze
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Analyze a web page using an LLM provider.
+     *
+     * Note: This endpoint may return HTTP 503 if LLM credits are exhausted.
+     *
+     * @param array{
+     *   url: string,
+     *   prompt?: string,
+     *   provider?: string,
+     *   apiKey?: string,
+     *   jsonSchema?: array<string, mixed>,
+     * } $options  provider: "openai", "anthropic", or "google"
+     *
+     * @return array{result: string, url: string}
+     * @throws SnapAPIException
+     */
+    public function analyze(array $options): array
+    {
+        if (empty($options['url'])) {
+            throw new ValidationException('url is required.');
+        }
+        return $this->decodeJson($this->http->post('/v1/analyze', $options));
     }
 
     // ──────────────────────────────────────────────────────────────────────────
@@ -186,18 +253,18 @@ class Client
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Quota  GET /v1/quota
+    // Usage  GET /v1/usage
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
-     * Return the caller's current API quota usage.
+     * Return the caller's current API usage statistics.
      *
-     * @return array<string, mixed> Keys: used, total, remaining, resetAt?
+     * @return array{used: int, total: int, remaining: int, resetAt?: string}
      * @throws SnapAPIException
      */
-    public function quota(): array
+    public function getUsage(): array
     {
-        return $this->decodeJson($this->http->get('/v1/quota'));
+        return $this->decodeJson($this->http->get('/v1/usage'));
     }
 
     // ──────────────────────────────────────────────────────────────────────────

@@ -15,12 +15,12 @@ use SnapAPI\Exceptions\ValidationException;
 /**
  * Unit tests for the SnapAPI PHP SDK.
  *
- * These tests use a real lightweight PHP built-in server to mock responses,
- * avoiding any dependency on the actual SnapAPI service.
+ * These tests verify input validation and exception hierarchy without
+ * requiring network access to the actual SnapAPI service.
  */
 class ClientTest extends TestCase
 {
-    // ── Constructor ────────────────────────────────────────────────────────────
+    // -- Constructor --
 
     public function testConstructorThrowsOnEmptyKey(): void
     {
@@ -28,7 +28,7 @@ class ClientTest extends TestCase
         new Client('');
     }
 
-    // ── ValidationException on missing URL ────────────────────────────────────
+    // -- ValidationException on missing URL --
 
     public function testScreenshotThrowsValidationExceptionWhenUrlMissing(): void
     {
@@ -51,6 +51,13 @@ class ClientTest extends TestCase
         $client->extract([]);
     }
 
+    public function testAnalyzeThrowsValidationExceptionWhenUrlMissing(): void
+    {
+        $client = new Client('test-key');
+        $this->expectException(ValidationException::class);
+        $client->analyze([]);
+    }
+
     public function testPdfThrowsValidationExceptionWhenUrlMissing(): void
     {
         $client = new Client('test-key');
@@ -65,7 +72,7 @@ class ClientTest extends TestCase
         $client->video([]);
     }
 
-    // ── Exception hierarchy ────────────────────────────────────────────────────
+    // -- Exception hierarchy --
 
     public function testRateLimitExceptionIsSnapAPIException(): void
     {
@@ -100,7 +107,7 @@ class ClientTest extends TestCase
         $this->assertSame(['field' => 'url'], $e->getDetails());
     }
 
-    // ── SnapAPIException string representation ─────────────────────────────────
+    // -- SnapAPIException string representation --
 
     public function testSnapAPIExceptionToString(): void
     {
@@ -109,7 +116,7 @@ class ClientTest extends TestCase
         $this->assertStringContainsString('Something went wrong', (string) $e);
     }
 
-    // ── Getters ────────────────────────────────────────────────────────────────
+    // -- Getters --
 
     public function testSnapAPIExceptionGetters(): void
     {
@@ -126,5 +133,19 @@ class ClientTest extends TestCase
     {
         $e = new RateLimitException('Rate limited');
         $this->assertSame(0, $e->getRetryAfter());
+    }
+
+    // -- Client instantiation with options --
+
+    public function testClientAcceptsOptions(): void
+    {
+        // Should not throw
+        $client = new Client('test-key', [
+            'timeout'      => 60,
+            'retries'      => 5,
+            'retryDelayMs' => 1000,
+            'baseUrl'      => 'https://api.snapapi.pics',
+        ]);
+        $this->assertInstanceOf(Client::class, $client);
     }
 }

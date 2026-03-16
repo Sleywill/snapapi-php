@@ -19,11 +19,11 @@ use SnapAPI\Exceptions\ValidationException;
  */
 final class HttpClient
 {
-    private const USER_AGENT = 'snapapi-php/3.0.0';
+    private const USER_AGENT = 'snapapi-php/2.1.0';
 
     /**
      * @param string $baseUrl  API base URL (no trailing slash).
-     * @param string $apiKey   Bearer token.
+     * @param string $apiKey   API key for X-Api-Key header.
      * @param int    $timeout  cURL timeout in seconds.
      * @param int    $retries  Maximum number of retries on transient errors.
      * @param int    $retryDelayMs  Base delay in milliseconds for exponential back-off.
@@ -100,7 +100,7 @@ final class HttpClient
                 if (!$this->isRetryable($e) || $attempt >= $this->retries) {
                     throw $e;
                 }
-                // Retryable server error — loop continues.
+                // Retryable server error -- loop continues.
             }
         }
 
@@ -126,7 +126,7 @@ final class HttpClient
         }
 
         $headers = [
-            'Authorization: Bearer ' . $this->apiKey,
+            'X-Api-Key: ' . $this->apiKey,
             'Content-Type: application/json',
             'User-Agent: ' . self::USER_AGENT,
             'Accept: */*',
@@ -218,6 +218,7 @@ final class HttpClient
             403     => 'FORBIDDEN',
             429     => 'RATE_LIMITED',
             400     => 'INVALID_PARAMS',
+            503     => 'SERVICE_UNAVAILABLE',
             default => match (strtoupper(str_replace(' ', '_', $rawCode))) {
                 'VALIDATION_ERROR', 'INVALID_PARAMS' => 'INVALID_PARAMS',
                 'UNAUTHORIZED'                       => 'UNAUTHORIZED',
