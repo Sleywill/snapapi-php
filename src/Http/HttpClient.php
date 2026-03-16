@@ -19,7 +19,7 @@ use SnapAPI\Exceptions\ValidationException;
  */
 final class HttpClient
 {
-    private const USER_AGENT = 'snapapi-php/2.1.0';
+    private const USER_AGENT = 'snapapi-php/3.1.0';
 
     /**
      * @param string $baseUrl  API base URL (no trailing slash).
@@ -127,6 +127,7 @@ final class HttpClient
 
         $headers = [
             'X-Api-Key: ' . $this->apiKey,
+            'Authorization: Bearer ' . $this->apiKey,
             'Content-Type: application/json',
             'User-Agent: ' . self::USER_AGENT,
             'Accept: */*',

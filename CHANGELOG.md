@@ -3,6 +3,19 @@
 All notable changes to the SnapAPI PHP SDK are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.1.0] - 2026-03-16
+
+### Added
+- `ogImage()` method for Open Graph social image generation
+- `ping()` method for API health check (`GET /v1/ping`)
+- `pdfToFile()` convenience method
+- `quota()` alias for `getUsage()`
+- `Authorization: Bearer` header sent alongside `X-Api-Key` for maximum compatibility
+
+### Changed
+- API base URL corrected to `https://snapapi.pics`
+- User-Agent updated to `snapapi-php/3.1.0`
+
 ## [2.1.0] - 2026-03-16
 
 ### Added

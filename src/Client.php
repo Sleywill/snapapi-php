@@ -9,7 +9,7 @@ use SnapAPI\Exceptions\ValidationException;
 use SnapAPI\Http\HttpClient;
 
 /**
- * SnapAPI PHP SDK v2.1.0 -- Official client.
+ * SnapAPI PHP SDK v3.1.0 -- Official client.
  *
  * Supports: Screenshot, PDF, Scrape, Extract, Analyze, Video, Usage.
  *
@@ -47,7 +47,7 @@ class Client
         }
 
         $this->http = new HttpClient(
-            baseUrl: rtrim($options['baseUrl'] ?? 'https://api.snapapi.pics', '/'),
+            baseUrl: rtrim($options['baseUrl'] ?? 'https://snapapi.pics', '/'),
             apiKey: $apiKey,
             timeout: $options['timeout'] ?? 30,
             retries: $options['retries'] ?? 3,
@@ -253,6 +253,75 @@ class Client
     }
 
     // ──────────────────────────────────────────────────────────────────────────
+    // PDF to File
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Generate a PDF and save it directly to a file.
+     *
+     * @param string $filename Path to write the file.
+     * @param array<string, mixed> $options Same as pdf().
+     *
+     * @return int Number of bytes written.
+     * @throws SnapAPIException
+     */
+    public function pdfToFile(string $filename, array $options): int
+    {
+        $data = $this->pdf($options);
+        $bytes = file_put_contents($filename, $data);
+        if ($bytes === false) {
+            throw new SnapAPIException("Failed to write file: {$filename}", 'FILE_ERROR', 0);
+        }
+        return $bytes;
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // OG Image  POST /v1/screenshot (with OG dimensions)
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Generate an Open Graph social image for a URL.
+     *
+     * Uses the screenshot endpoint with standard OG dimensions (1200x630).
+     *
+     * @param array{
+     *   url: string,
+     *   format?: string,
+     *   width?: int,
+     *   height?: int,
+     * } $options
+     *
+     * @return string Raw image bytes.
+     * @throws SnapAPIException
+     */
+    public function ogImage(array $options): string
+    {
+        if (empty($options['url'])) {
+            throw new ValidationException('url is required.');
+        }
+        $params = array_merge([
+            'width' => 1200,
+            'height' => 630,
+        ], $options);
+        return $this->http->post('/v1/screenshot', $params);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Ping  GET /v1/ping
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Check API health.
+     *
+     * @return array{status: string, timestamp: int}
+     * @throws SnapAPIException
+     */
+    public function ping(): array
+    {
+        return $this->decodeJson($this->http->get('/v1/ping'));
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // Usage  GET /v1/usage
     // ──────────────────────────────────────────────────────────────────────────
 
@@ -265,6 +334,17 @@ class Client
     public function getUsage(): array
     {
         return $this->decodeJson($this->http->get('/v1/usage'));
+    }
+
+    /**
+     * Alias for getUsage().
+     *
+     * @return array{used: int, total: int, remaining: int, resetAt?: string}
+     * @throws SnapAPIException
+     */
+    public function quota(): array
+    {
+        return $this->getUsage();
     }
 
     // ──────────────────────────────────────────────────────────────────────────
