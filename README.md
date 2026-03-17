@@ -467,6 +467,15 @@ composer analyse
 
 PHPStan level 8, zero errors.
 
+## Links
+
+- [SnapAPI Website](https://snapapi.pics)
+- [API Documentation](https://snapapi.pics/docs)
+- [GitHub Repository](https://github.com/Sleywill/snapapi-php)
+- [Packagist](https://packagist.org/packages/snapapi/snapapi-php)
+- [Changelog](./CHANGELOG.md)
+- [Report Issues](https://github.com/Sleywill/snapapi-php/issues)
+
 ## License
 
-MIT -- see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE).
