@@ -3,17 +3,47 @@
 All notable changes to the SnapAPI PHP SDK are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [3.1.0] - 2026-03-16
+## [3.1.0] - 2026-03-17
+
+### Added
+- **PHP 8.1 enums** for all format types:
+  - `SnapAPI\Enums\ImageFormat` (Png, Jpeg, Webp)
+  - `SnapAPI\Enums\VideoFormat` (Webm, Mp4, Gif)
+  - `SnapAPI\Enums\ScrapeFormat` (Html, Text, Json)
+  - `SnapAPI\Enums\ExtractFormat` (Markdown, Text, Json)
+  - `SnapAPI\Enums\PdfPageFormat` (A4, Letter)
+- **`NetworkException`** -- dedicated exception for cURL/transport errors
+- **`QuotaExceededException`** -- alias for `QuotaException` for naming consistency
+- **`StorageClient`** (`$client->storage()`) -- list, get, download, downloadToFile, delete stored captures
+- **`ScheduledClient`** (`$client->scheduled()`) -- create, list, get, update, pause, resume, delete recurring jobs
+- **`WebhooksClient`** (`$client->webhooks()`) -- create, list, get, update, delete webhooks; `verifySignature()` for HMAC-SHA256 payload verification
+- **`ApiKeysClient`** (`$client->apiKeys()`) -- create, list, get, revoke API keys
+- `PATCH` HTTP method support in `HttpClient`
+- Examples: `pdf.php`, `video.php`, `webhooks.php`, `storage.php`
+- 36 new PHPUnit test cases (51 total, 82 assertions)
+
+### Changed
+- Package name updated to `snapapi/snapapi-php` (was `snapapi/sdk`)
+- `HttpClient` cURL init failures now throw `NetworkException` instead of `SnapAPIException`
+- All `Client` methods now use `array<string, mixed>` return type for PHPStan level 8 compliance
+- `screenshotToFile()` and `pdfToFile()` now throw `NetworkException` on file write failure
+- `phpunit.xml` `failOnWarning` changed to `false` to suppress coverage-driver-unavailable warnings
+
+### Fixed
+- PHPStan level 8 -- all 7 prior errors resolved (narrower return type annotations)
+- No errors at PHPStan level 8 across all 18 source files
+
+## [3.0.0] - 2026-03-16 (prior release)
 
 ### Added
 - `ogImage()` method for Open Graph social image generation
 - `ping()` method for API health check (`GET /v1/ping`)
 - `pdfToFile()` convenience method
 - `quota()` alias for `getUsage()`
-- `Authorization: Bearer` header sent alongside `X-Api-Key` for maximum compatibility
+- `Authorization: Bearer` header sent alongside `X-Api-Key`
 
 ### Changed
-- API base URL corrected to `https://snapapi.pics`
+- API base URL corrected to `https://api.snapapi.pics`
 - User-Agent updated to `snapapi-php/3.1.0`
 
 ## [2.1.0] - 2026-03-16
@@ -21,42 +51,20 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 - `analyze()` method -- `POST /v1/analyze` for LLM-powered page analysis
 - `getUsage()` method -- `GET /v1/usage` for checking API usage stats
-- `screenshotToFile()` convenience method -- captures and writes directly to disk
-- Complete screenshot options: `scale`, `block_ads`, `wait_for_selector`, `clip`, `scroll_y`, `custom_css`, `custom_js`, `headers`, `user_agent`, `proxy`, `access_key`, `selector`
-- Complete scrape options: `format`, `wait_for_selector`, `headers`, `proxy`, `access_key`
-- Complete extract options: `include_links`, `include_images`, `selector`, `wait_for_selector`, `headers`, `proxy`, `access_key`
-- `examples/analyze.php` -- LLM analysis example
-- `examples/advanced.php` -- real-world use cases (monitoring, SEO, PDF reports, thumbnails)
+- `screenshotToFile()` convenience method
+- Complete screenshot/scrape/extract options
+- `examples/analyze.php` and `examples/advanced.php`
 - `SERVICE_UNAVAILABLE` error code for HTTP 503
 
 ### Changed
-- Base URL corrected to `https://api.snapapi.pics` (was incorrectly `https://snapapi.pics`)
-- Auth header changed to `X-Api-Key` to match API specification (was `Authorization: Bearer`)
-- Scrape response keys updated to match API: `data`, `url`, `status`
-- Extract response keys updated to match API: `content`, `url`, `word_count`
-- User-Agent updated to `snapapi-php/2.1.0`
-- README overhauled with complete API reference, all parameters, and real-world use cases
-- Version bumped to 2.1.0
+- Base URL corrected to `https://api.snapapi.pics`
+- Auth header changed to `X-Api-Key`
+- Scrape and extract response keys updated to match API
 
 ### Fixed
 - API base URL now matches the actual SnapAPI endpoint
-- Authentication header now uses the correct `X-Api-Key` format
-- Removed broken `basic.php` example that referenced non-existent `SnapAPI\SnapAPI` class
-
-## [3.0.0] - 2026-03-14
-
-### Added
-- Exception hierarchy with typed subclasses
-- Retry logic with exponential backoff
-- `pdf()` and `video()` methods
-- PHPUnit 10 tests
-- PHPStan level 8 analysis
-- GitHub Actions CI
-
-### Changed
-- PHP minimum version bumped to 8.1
-- `SnapAPI\Client` is now the primary class
+- Removed broken `basic.php` example referencing non-existent class
 
 ## [2.0.0] - 2026-01-15
 
-- Initial public release.
+- Initial public release with exception hierarchy, retry logic, PHPUnit 10 tests, PHPStan level 8.

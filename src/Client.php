@@ -4,10 +4,14 @@ declare(strict_types=1);
 
 namespace SnapAPI;
 
+use SnapAPI\ApiKeys\ApiKeysClient;
 use SnapAPI\Exceptions\NetworkException;
 use SnapAPI\Exceptions\SnapAPIException;
 use SnapAPI\Exceptions\ValidationException;
 use SnapAPI\Http\HttpClient;
+use SnapAPI\Scheduled\ScheduledClient;
+use SnapAPI\Storage\StorageClient;
+use SnapAPI\Webhooks\WebhooksClient;
 
 /**
  * SnapAPI PHP SDK v3.1.0 -- Official client.
@@ -343,6 +347,65 @@ class Client
     public function quota(): array
     {
         return $this->getUsage();
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // Sub-clients
+    // ──────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Access the Storage sub-client for managing stored captures.
+     *
+     * ```php
+     * $files = $client->storage()->list();
+     * ```
+     */
+    public function storage(): StorageClient
+    {
+        return new StorageClient($this->http);
+    }
+
+    /**
+     * Access the Scheduled sub-client for recurring capture jobs.
+     *
+     * ```php
+     * $client->scheduled()->create([
+     *     'url'      => 'https://example.com',
+     *     'type'     => 'screenshot',
+     *     'schedule' => '0 9 * * *',
+     * ]);
+     * ```
+     */
+    public function scheduled(): ScheduledClient
+    {
+        return new ScheduledClient($this->http);
+    }
+
+    /**
+     * Access the Webhooks sub-client for managing event delivery endpoints.
+     *
+     * ```php
+     * $client->webhooks()->create([
+     *     'url'    => 'https://myapp.com/hooks/snapapi',
+     *     'events' => ['screenshot.completed'],
+     * ]);
+     * ```
+     */
+    public function webhooks(): WebhooksClient
+    {
+        return new WebhooksClient($this->http);
+    }
+
+    /**
+     * Access the API Keys sub-client for managing additional keys.
+     *
+     * ```php
+     * $key = $client->apiKeys()->create(['name' => 'ci-key']);
+     * ```
+     */
+    public function apiKeys(): ApiKeysClient
+    {
+        return new ApiKeysClient($this->http);
     }
 
     // ──────────────────────────────────────────────────────────────────────────

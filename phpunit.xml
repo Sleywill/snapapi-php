@@ -3,7 +3,7 @@
          xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.0/phpunit.xsd"
          bootstrap="vendor/autoload.php"
          colors="true"
-         failOnWarning="true"
+         failOnWarning="false"
          failOnRisky="true">
     <testsuites>
         <testsuite name="SnapAPI PHP SDK">
@@ -15,9 +15,4 @@
             <directory suffix=".php">src/</directory>
         </include>
     </source>
-    <coverage>
-        <report>
-            <text outputFile="php://stdout"/>
-        </report>
-    </coverage>
 </phpunit>

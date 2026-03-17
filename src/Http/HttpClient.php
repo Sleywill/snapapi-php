@@ -60,6 +60,17 @@ final class HttpClient
     }
 
     /**
+     * Perform a PATCH request with a JSON body and return the response body.
+     *
+     * @param array<string, mixed> $data
+     * @throws SnapAPIException
+     */
+    public function patch(string $path, array $data = []): string
+    {
+        return $this->send('PATCH', $path, $data);
+    }
+
+    /**
      * Perform a DELETE request.
      *
      * @throws SnapAPIException
@@ -144,6 +155,9 @@ final class HttpClient
         if ($method === 'POST') {
             $curlOpts[CURLOPT_POST]       = true;
             $curlOpts[CURLOPT_POSTFIELDS] = $data !== null ? (string) json_encode($data) : '{}';
+        } elseif ($method === 'PATCH') {
+            $curlOpts[CURLOPT_CUSTOMREQUEST] = 'PATCH';
+            $curlOpts[CURLOPT_POSTFIELDS]    = $data !== null ? (string) json_encode($data) : '{}';
         } elseif ($method === 'DELETE') {
             $curlOpts[CURLOPT_CUSTOMREQUEST] = 'DELETE';
         }
