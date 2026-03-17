@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace SnapAPI;
 
+use SnapAPI\Exceptions\NetworkException;
 use SnapAPI\Exceptions\SnapAPIException;
 use SnapAPI\Exceptions\ValidationException;
 use SnapAPI\Http\HttpClient;
@@ -11,7 +12,7 @@ use SnapAPI\Http\HttpClient;
 /**
  * SnapAPI PHP SDK v3.1.0 -- Official client.
  *
- * Supports: Screenshot, PDF, Scrape, Extract, Analyze, Video, Usage.
+ * Supports: Screenshot, PDF, Scrape, Extract, Analyze, Video, OG Image, Usage.
  *
  * ```php
  * $client = new \SnapAPI\Client('sk_live_...');
@@ -30,7 +31,7 @@ class Client
     /**
      * Create a new SnapAPI client.
      *
-     * @param string $apiKey Your SnapAPI key (e.g. "sk_live_...").
+     * @param string $apiKey  Your SnapAPI key (e.g. "sk_live_...").
      * @param array{
      *     baseUrl?: string,
      *     timeout?: int,
@@ -62,18 +63,18 @@ class Client
     /**
      * Capture a screenshot of a URL.
      *
-     * Returns raw binary image bytes (PNG, JPEG, WebP, or PDF).
+     * Returns raw binary image bytes (PNG, JPEG, or WebP).
      *
-     * @param array{
-     *   url: string,
-     *   format?: string,
-     *   width?: int,
-     *   height?: int,
-     *   full_page?: bool,
-     *   delay?: int,
-     *   quality?: int,
-     *   scale?: float,
-     *   block_ads?: bool,
+     * @param array<string, mixed> $options {
+     *   url: string,             -- required
+     *   format?: string,         -- "png" | "jpeg" | "webp"  (default "png")
+     *   width?: int,             -- viewport width in pixels
+     *   height?: int,            -- viewport height in pixels
+     *   full_page?: bool,        -- capture entire scrollable page
+     *   delay?: int,             -- ms to wait after page load
+     *   quality?: int,           -- JPEG/WebP quality 1-100
+     *   scale?: float,           -- device scale factor (retina)
+     *   block_ads?: bool,        -- enable ad blocking
      *   wait_for_selector?: string,
      *   clip?: array{x: int, y: int, w: int, h: int},
      *   scroll_y?: int,
@@ -82,9 +83,8 @@ class Client
      *   headers?: array<string, string>,
      *   user_agent?: string,
      *   proxy?: string,
-     *   access_key?: string,
      *   selector?: string,
-     * } $options
+     * }
      *
      * @return string Raw image bytes.
      * @throws SnapAPIException
@@ -100,18 +100,18 @@ class Client
     /**
      * Capture a screenshot and save it directly to a file.
      *
-     * @param string $filename Path to write the file.
-     * @param array<string, mixed> $options Same as screenshot().
+     * @param string               $filename Path to write the file.
+     * @param array<string, mixed> $options  Same options as screenshot().
      *
      * @return int Number of bytes written.
      * @throws SnapAPIException
      */
     public function screenshotToFile(string $filename, array $options): int
     {
-        $data = $this->screenshot($options);
+        $data  = $this->screenshot($options);
         $bytes = file_put_contents($filename, $data);
         if ($bytes === false) {
-            throw new SnapAPIException("Failed to write file: {$filename}", 'FILE_ERROR', 0);
+            throw new NetworkException("Failed to write file: {$filename}");
         }
         return $bytes;
     }
@@ -123,17 +123,18 @@ class Client
     /**
      * Scrape content from a URL.
      *
-     * @param array{
-     *   url: string,
+     * Response shape: { data: string, url: string, status: int }
+     *
+     * @param array<string, mixed> $options {
+     *   url: string,                -- required
      *   selector?: string,
-     *   format?: string,
+     *   format?: string,            -- "html" (default) | "text" | "json"
      *   wait_for_selector?: string,
      *   headers?: array<string, string>,
      *   proxy?: string,
-     *   access_key?: string,
-     * } $options  format: "html" (default), "text", or "json"
+     * }
      *
-     * @return array{data: string, url: string, status: int}
+     * @return array<string, mixed>
      * @throws SnapAPIException
      */
     public function scrape(array $options): array
@@ -151,19 +152,20 @@ class Client
     /**
      * Extract LLM-ready content from a URL.
      *
-     * @param array{
-     *   url: string,
-     *   format?: string,
+     * Response shape: { content: string, url: string, word_count: int }
+     *
+     * @param array<string, mixed> $options {
+     *   url: string,                -- required
+     *   format?: string,            -- "markdown" (default) | "text" | "json"
      *   include_links?: bool,
      *   include_images?: bool,
      *   selector?: string,
      *   wait_for_selector?: string,
      *   headers?: array<string, string>,
      *   proxy?: string,
-     *   access_key?: string,
-     * } $options  format: "markdown" (default), "text", or "json"
+     * }
      *
-     * @return array{content: string, url: string, word_count: int}
+     * @return array<string, mixed>
      * @throws SnapAPIException
      */
     public function extract(array $options): array
@@ -183,15 +185,17 @@ class Client
      *
      * Note: This endpoint may return HTTP 503 if LLM credits are exhausted.
      *
-     * @param array{
-     *   url: string,
-     *   prompt?: string,
-     *   provider?: string,
-     *   apiKey?: string,
-     *   jsonSchema?: array<string, mixed>,
-     * } $options  provider: "openai", "anthropic", or "google"
+     * Response shape: { result: string, url: string }
      *
-     * @return array{result: string, url: string}
+     * @param array<string, mixed> $options {
+     *   url: string,                        -- required
+     *   prompt?: string,
+     *   provider?: string,                  -- "openai" | "anthropic" | "google"
+     *   apiKey?: string,                    -- your LLM provider key
+     *   jsonSchema?: array<string, mixed>,
+     * }
+     *
+     * @return array<string, mixed>
      * @throws SnapAPIException
      */
     public function analyze(array $options): array
@@ -209,11 +213,11 @@ class Client
     /**
      * Generate a PDF of a URL.
      *
-     * @param array{
-     *   url: string,
-     *   format?: string,
-     *   margin?: string,
-     * } $options  format: "a4" (default) or "letter"
+     * @param array<string, mixed> $options {
+     *   url: string,       -- required
+     *   format?: string,   -- "a4" (default) | "letter"
+     *   margin?: string,   -- e.g. "10mm"
+     * }
      *
      * @return string Raw PDF bytes.
      * @throws SnapAPIException
@@ -226,6 +230,25 @@ class Client
         return $this->http->post('/v1/pdf', $options);
     }
 
+    /**
+     * Generate a PDF and save it directly to a file.
+     *
+     * @param string               $filename Path to write the file.
+     * @param array<string, mixed> $options  Same options as pdf().
+     *
+     * @return int Number of bytes written.
+     * @throws SnapAPIException
+     */
+    public function pdfToFile(string $filename, array $options): int
+    {
+        $data  = $this->pdf($options);
+        $bytes = file_put_contents($filename, $data);
+        if ($bytes === false) {
+            throw new NetworkException("Failed to write file: {$filename}");
+        }
+        return $bytes;
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Video  POST /v1/video
     // ──────────────────────────────────────────────────────────────────────────
@@ -233,13 +256,13 @@ class Client
     /**
      * Record a short video of a URL.
      *
-     * @param array{
-     *   url: string,
-     *   duration?: int,
-     *   format?: string,
+     * @param array<string, mixed> $options {
+     *   url: string,       -- required
+     *   duration?: int,    -- seconds (default 5)
+     *   format?: string,   -- "webm" (default) | "mp4" | "gif"
      *   width?: int,
      *   height?: int,
-     * } $options  format: "webm" (default), "mp4", or "gif"
+     * }
      *
      * @return string Raw video bytes.
      * @throws SnapAPIException
@@ -253,43 +276,17 @@ class Client
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // PDF to File
-    // ──────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Generate a PDF and save it directly to a file.
-     *
-     * @param string $filename Path to write the file.
-     * @param array<string, mixed> $options Same as pdf().
-     *
-     * @return int Number of bytes written.
-     * @throws SnapAPIException
-     */
-    public function pdfToFile(string $filename, array $options): int
-    {
-        $data = $this->pdf($options);
-        $bytes = file_put_contents($filename, $data);
-        if ($bytes === false) {
-            throw new SnapAPIException("Failed to write file: {$filename}", 'FILE_ERROR', 0);
-        }
-        return $bytes;
-    }
-
-    // ──────────────────────────────────────────────────────────────────────────
-    // OG Image  POST /v1/screenshot (with OG dimensions)
+    // OG Image  POST /v1/screenshot  (1200×630 preset)
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
      * Generate an Open Graph social image for a URL.
      *
-     * Uses the screenshot endpoint with standard OG dimensions (1200x630).
+     * Calls the screenshot endpoint with standard OG dimensions (1200×630)
+     * unless overridden by $options.
      *
-     * @param array{
-     *   url: string,
-     *   format?: string,
-     *   width?: int,
-     *   height?: int,
-     * } $options
+     * @param array<string, mixed> $options Same options as screenshot().
+     *                                       url is required.
      *
      * @return string Raw image bytes.
      * @throws SnapAPIException
@@ -299,10 +296,7 @@ class Client
         if (empty($options['url'])) {
             throw new ValidationException('url is required.');
         }
-        $params = array_merge([
-            'width' => 1200,
-            'height' => 630,
-        ], $options);
+        $params = array_merge(['width' => 1200, 'height' => 630], $options);
         return $this->http->post('/v1/screenshot', $params);
     }
 
@@ -313,7 +307,9 @@ class Client
     /**
      * Check API health.
      *
-     * @return array{status: string, timestamp: int}
+     * Response shape: { status: string, timestamp: int }
+     *
+     * @return array<string, mixed>
      * @throws SnapAPIException
      */
     public function ping(): array
@@ -328,7 +324,9 @@ class Client
     /**
      * Return the caller's current API usage statistics.
      *
-     * @return array{used: int, total: int, remaining: int, resetAt?: string}
+     * Response shape: { used: int, total: int, remaining: int, resetAt?: string }
+     *
+     * @return array<string, mixed>
      * @throws SnapAPIException
      */
     public function getUsage(): array
@@ -339,7 +337,7 @@ class Client
     /**
      * Alias for getUsage().
      *
-     * @return array{used: int, total: int, remaining: int, resetAt?: string}
+     * @return array<string, mixed>
      * @throws SnapAPIException
      */
     public function quota(): array
@@ -348,7 +346,7 @@ class Client
     }
 
     // ──────────────────────────────────────────────────────────────────────────
-    // Internal
+    // Internal helpers
     // ──────────────────────────────────────────────────────────────────────────
 
     /**

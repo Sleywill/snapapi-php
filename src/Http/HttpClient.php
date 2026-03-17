@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace SnapAPI\Http;
 
 use SnapAPI\Exceptions\AuthenticationException;
+use SnapAPI\Exceptions\NetworkException;
 use SnapAPI\Exceptions\QuotaException;
 use SnapAPI\Exceptions\RateLimitException;
 use SnapAPI\Exceptions\SnapAPIException;
@@ -122,7 +123,7 @@ final class HttpClient
     {
         $ch = curl_init($this->baseUrl . $path);
         if ($ch === false) {
-            throw new SnapAPIException('Failed to initialise cURL.', 'CONNECTION_ERROR', 0);
+            throw new NetworkException('Failed to initialise cURL.');
         }
 
         $headers = [
@@ -156,7 +157,7 @@ final class HttpClient
         curl_close($ch);
 
         if ($curlError !== '') {
-            throw new SnapAPIException('cURL error: ' . $curlError, 'CONNECTION_ERROR', 0);
+            throw new NetworkException('cURL error: ' . $curlError);
         }
 
         $responseHeaders = substr($raw, 0, $headerSize);
