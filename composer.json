@@ -1,7 +1,7 @@
 {
     "name": "snapapi/snapapi-php",
     "description": "Official PHP SDK for SnapAPI.pics -- screenshot, PDF, scrape, extract, analyze, video, storage, scheduled captures, webhooks, and API key management",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "type": "library",
     "license": "MIT",
     "keywords": [

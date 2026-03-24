@@ -3,6 +3,20 @@
 All notable changes to the SnapAPI PHP SDK are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.2.0] - 2026-03-23
+
+### Added
+- `dark_mode` and `block_cookies` parameters documented for `screenshot()`
+- `selectors` (named multi-element) and `waitFor` parameters documented for `scrape()`
+- `scrollVideo` parameter documented for `video()`
+- `generatePdf()` alias method for `pdf()`
+- `generateOgImage()` alias method for `ogImage()`
+- 2 new PHPUnit test cases (53 total, 84 assertions)
+
+### Changed
+- User-Agent updated to `snapapi-php/3.2.0`
+- Version bumped to 3.2.0 in `composer.json`
+
 ## [3.1.0] - 2026-03-17
 
 ### Added

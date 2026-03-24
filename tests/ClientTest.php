@@ -139,6 +139,24 @@ class ClientTest extends TestCase
     //  via the sub-client validation tests below)
 
     // ──────────────────────────────────────────────────────────────────────────
+    // Method aliases -- generatePdf, generateOgImage
+    // ──────────────────────────────────────────────────────────────────────────
+
+    public function testGeneratePdfThrowsWhenUrlMissing(): void
+    {
+        $client = new Client('test-key');
+        $this->expectException(ValidationException::class);
+        $client->generatePdf([]);
+    }
+
+    public function testGenerateOgImageThrowsWhenUrlMissing(): void
+    {
+        $client = new Client('test-key');
+        $this->expectException(ValidationException::class);
+        $client->generateOgImage([]);
+    }
+
+    // ──────────────────────────────────────────────────────────────────────────
     // Exception hierarchy
     // ──────────────────────────────────────────────────────────────────────────
 

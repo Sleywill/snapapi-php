@@ -103,6 +103,8 @@ $image = $client->screenshot([
     'quality'           => 85,         // JPEG/WebP quality (1-100)
     'scale'             => 2.0,        // device scale factor (retina)
     'block_ads'         => true,
+    'block_cookies'     => true,       // block cookie consent banners
+    'dark_mode'         => true,       // enable prefers-color-scheme: dark
     'wait_for_selector' => '.loaded',
     'selector'          => '#hero',    // capture only this element
     'scroll_y'          => 500,
@@ -133,7 +135,9 @@ echo "Wrote {$bytes} bytes\n";
 $result = $client->scrape([
     'url'               => 'https://example.com',  // required
     'selector'          => 'article',
+    'selectors'         => ['title' => 'h1', 'body' => 'article'], // named multi-element
     'format'            => 'html',   // "html" | "text" | "json"
+    'waitFor'           => '.content', // wait for selector/timeout before scraping
     'wait_for_selector' => '.content',
     'headers'           => ['Accept-Language' => 'en-US'],
     'proxy'             => 'http://proxy:8080',
@@ -202,11 +206,12 @@ $bytes = $client->pdfToFile('output.pdf', [
 
 ```php
 $video = $client->video([
-    'url'      => 'https://example.com',  // required
-    'duration' => 5,
-    'format'   => 'mp4',  // "webm" | "mp4" | "gif"
-    'width'    => 1280,
-    'height'   => 720,
+    'url'         => 'https://example.com',  // required
+    'duration'    => 5,
+    'format'      => 'mp4',  // "webm" | "mp4" | "gif"
+    'width'       => 1280,
+    'height'      => 720,
+    'scrollVideo' => true,   // scroll-based video recording
 ]);
 file_put_contents('capture.mp4', $video);
 ```

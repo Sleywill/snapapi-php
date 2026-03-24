@@ -14,7 +14,7 @@ use SnapAPI\Storage\StorageClient;
 use SnapAPI\Webhooks\WebhooksClient;
 
 /**
- * SnapAPI PHP SDK v3.1.0 -- Official client.
+ * SnapAPI PHP SDK v3.2.0 -- Official client.
  *
  * Supports: Screenshot, PDF, Scrape, Extract, Analyze, Video, OG Image, Usage.
  *
@@ -79,6 +79,8 @@ class Client
      *   quality?: int,           -- JPEG/WebP quality 1-100
      *   scale?: float,           -- device scale factor (retina)
      *   block_ads?: bool,        -- enable ad blocking
+     *   block_cookies?: bool,    -- block cookie consent banners
+     *   dark_mode?: bool,        -- enable prefers-color-scheme: dark
      *   wait_for_selector?: string,
      *   clip?: array{x: int, y: int, w: int, h: int},
      *   scroll_y?: int,
@@ -132,7 +134,9 @@ class Client
      * @param array<string, mixed> $options {
      *   url: string,                -- required
      *   selector?: string,
+     *   selectors?: array<string, string>, -- named multi-element selectors
      *   format?: string,            -- "html" (default) | "text" | "json"
+     *   waitFor?: string,           -- CSS selector or timeout to wait for
      *   wait_for_selector?: string,
      *   headers?: array<string, string>,
      *   proxy?: string,
@@ -253,6 +257,18 @@ class Client
         return $bytes;
     }
 
+    /**
+     * Alias for pdf().
+     *
+     * @param array<string, mixed> $options Same options as pdf().
+     * @return string Raw PDF bytes.
+     * @throws SnapAPIException
+     */
+    public function generatePdf(array $options): string
+    {
+        return $this->pdf($options);
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Video  POST /v1/video
     // ──────────────────────────────────────────────────────────────────────────
@@ -261,11 +277,12 @@ class Client
      * Record a short video of a URL.
      *
      * @param array<string, mixed> $options {
-     *   url: string,       -- required
-     *   duration?: int,    -- seconds (default 5)
-     *   format?: string,   -- "webm" (default) | "mp4" | "gif"
+     *   url: string,           -- required
+     *   duration?: int,        -- seconds (default 5)
+     *   format?: string,       -- "webm" (default) | "mp4" | "gif"
      *   width?: int,
      *   height?: int,
+     *   scrollVideo?: bool,    -- scroll-based video recording
      * }
      *
      * @return string Raw video bytes.
@@ -302,6 +319,18 @@ class Client
         }
         $params = array_merge(['width' => 1200, 'height' => 630], $options);
         return $this->http->post('/v1/screenshot', $params);
+    }
+
+    /**
+     * Alias for ogImage().
+     *
+     * @param array<string, mixed> $options Same options as ogImage().
+     * @return string Raw image bytes.
+     * @throws SnapAPIException
+     */
+    public function generateOgImage(array $options): string
+    {
+        return $this->ogImage($options);
     }
 
     // ──────────────────────────────────────────────────────────────────────────
