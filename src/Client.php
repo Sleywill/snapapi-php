@@ -41,6 +41,7 @@ class Client
      *     timeout?: int,
      *     retries?: int,
      *     retryDelayMs?: int,
+     *     transport?: callable,
      * } $options
      *
      * @throws \InvalidArgumentException if $apiKey is empty.
@@ -51,12 +52,16 @@ class Client
             throw new \InvalidArgumentException('API key must not be empty.');
         }
 
+        /** @var (callable(string, string, ?string, array<int, string>): array{int, string, string})|null $transport */
+        $transport = $options['transport'] ?? null;
+
         $this->http = new HttpClient(
             baseUrl: rtrim($options['baseUrl'] ?? 'https://api.snapapi.pics', '/'),
             apiKey: $apiKey,
             timeout: $options['timeout'] ?? 30,
             retries: $options['retries'] ?? 3,
             retryDelayMs: $options['retryDelayMs'] ?? 500,
+            transport: $transport,
         );
     }
 
@@ -122,6 +127,30 @@ class Client
         return $bytes;
     }
 
+    /**
+     * Capture a screenshot and store it in SnapAPI-managed cloud storage.
+     *
+     * Returns metadata including the public URL and storage key.
+     *
+     * @param array<string, mixed> $options {
+     *   url: string,                -- required
+     *   format?: string,            -- "png" | "jpeg" | "webp"
+     *   storage_key?: string,       -- custom key/path in storage
+     *   storage_bucket?: string,    -- override default bucket
+     *   ...                         -- all screenshot() options accepted
+     * }
+     *
+     * @return array<string, mixed> { url: string, key: string, bucket: string, size: int, content_type: string, created_at: string }
+     * @throws SnapAPIException
+     */
+    public function screenshotToStorage(array $options): array
+    {
+        if (empty($options['url'])) {
+            throw new ValidationException('url is required.');
+        }
+        return $this->decodeJson($this->http->post('/v1/screenshot/storage', $options));
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Scrape  POST /v1/scrape
     // ──────────────────────────────────────────────────────────────────────────
@@ -153,6 +182,32 @@ class Client
         return $this->decodeJson($this->http->post('/v1/scrape', $options));
     }
 
+    /**
+     * Convenience wrapper: scrape a URL and return only the plain-text content.
+     *
+     * @param string $url The URL to scrape.
+     * @return string Plain-text content.
+     * @throws SnapAPIException
+     */
+    public function scrapeText(string $url): string
+    {
+        $result = $this->scrape(['url' => $url, 'format' => 'text']);
+        return (string) ($result['data'] ?? '');
+    }
+
+    /**
+     * Convenience wrapper: scrape a URL and return only the raw HTML.
+     *
+     * @param string $url The URL to scrape.
+     * @return string Raw HTML content.
+     * @throws SnapAPIException
+     */
+    public function scrapeHtml(string $url): string
+    {
+        $result = $this->scrape(['url' => $url, 'format' => 'html']);
+        return (string) ($result['data'] ?? '');
+    }
+
     // ──────────────────────────────────────────────────────────────────────────
     // Extract  POST /v1/extract
     // ──────────────────────────────────────────────────────────────────────────
@@ -182,6 +237,32 @@ class Client
             throw new ValidationException('url is required.');
         }
         return $this->decodeJson($this->http->post('/v1/extract', $options));
+    }
+
+    /**
+     * Convenience wrapper: extract content as Markdown and return just the string.
+     *
+     * @param string $url The URL to extract from.
+     * @return string Markdown content.
+     * @throws SnapAPIException
+     */
+    public function extractMarkdown(string $url): string
+    {
+        $result = $this->extract(['url' => $url, 'format' => 'markdown']);
+        return (string) ($result['content'] ?? '');
+    }
+
+    /**
+     * Convenience wrapper: extract content as plain text and return just the string.
+     *
+     * @param string $url The URL to extract from.
+     * @return string Plain-text content.
+     * @throws SnapAPIException
+     */
+    public function extractText(string $url): string
+    {
+        $result = $this->extract(['url' => $url, 'format' => 'text']);
+        return (string) ($result['content'] ?? '');
     }
 
     // ──────────────────────────────────────────────────────────────────────────

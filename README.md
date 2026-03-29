@@ -1,10 +1,12 @@
-# snapapi-php
+# SnapAPI PHP SDK
 
-Official PHP SDK for [SnapAPI.pics](https://snapapi.pics) -- capture screenshots, generate PDFs, scrape pages, extract LLM-ready content, record videos, manage storage, schedule recurring captures, and handle webhooks.
+Official PHP SDK for [SnapAPI.pics](https://snapapi.pics) — capture screenshots, generate PDFs, scrape pages, extract LLM-ready content, record videos, manage storage, schedule recurring captures, and handle webhooks.
 
+[![Packagist Version](https://img.shields.io/packagist/v/snapapi/snapapi-php?label=packagist&color=F28D1A)](https://packagist.org/packages/snapapi/snapapi-php)
+[![Packagist Downloads](https://img.shields.io/packagist/dm/snapapi/snapapi-php?label=downloads&color=F28D1A)](https://packagist.org/packages/snapapi/snapapi-php)
 [![CI](https://github.com/Sleywill/snapapi-php/actions/workflows/ci.yml/badge.svg)](https://github.com/Sleywill/snapapi-php/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-blue.svg)](https://www.php.net/)
+[![PHP 8.1+](https://img.shields.io/badge/PHP-8.1%2B-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 
 ## Features
 
@@ -129,6 +131,21 @@ $bytes = $client->screenshotToFile('output.png', [
 echo "Wrote {$bytes} bytes\n";
 ```
 
+### screenshotToStorage() -- `POST /v1/screenshot/storage`
+
+Capture and store directly in SnapAPI-managed cloud storage:
+
+```php
+$capture = $client->screenshotToStorage([
+    'url'         => 'https://example.com',
+    'format'      => 'png',
+    'storage_key' => 'reports/2026-03-17/home.png',
+]);
+echo $capture['url'];   // public CDN URL
+echo $capture['key'];   // storage key
+echo $capture['size'];  // bytes
+```
+
 ### scrape() -- `POST /v1/scrape`
 
 ```php
@@ -145,6 +162,18 @@ $result = $client->scrape([
 echo $result['data'];    // scraped content
 echo $result['url'];     // final URL after redirects
 echo $result['status'];  // HTTP status of the scraped page
+```
+
+### Convenience methods
+
+```php
+// Scrape shortcuts
+$text = $client->scrapeText('https://example.com');
+$html = $client->scrapeHtml('https://example.com');
+
+// Extract shortcuts
+$md   = $client->extractMarkdown('https://example.com/blog/post');
+$text = $client->extractText('https://example.com/blog/post');
 ```
 
 ### extract() -- `POST /v1/extract`
@@ -471,6 +500,20 @@ composer analyse
 ```
 
 PHPStan level 8, zero errors.
+
+## Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before submitting a PR.
+
+```bash
+git clone https://github.com/Sleywill/snapapi-php.git
+cd snapapi-php
+composer install
+composer test
+```
+
+Found a bug? [Open an issue](https://github.com/Sleywill/snapapi-php/issues/new?template=bug_report.md).
+Have an idea? [Request a feature](https://github.com/Sleywill/snapapi-php/issues/new?template=feature_request.md).
 
 ## Links
 

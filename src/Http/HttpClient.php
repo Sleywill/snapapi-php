@@ -23,11 +23,21 @@ final class HttpClient
     private const USER_AGENT = 'snapapi-php/3.2.0';
 
     /**
+     * Optional transport callback for testing. When set, this is called instead
+     * of cURL. Signature: fn(string $method, string $url, ?string $body, array $headers): array{int, string, string}
+     * Returns [httpCode, responseHeaders, responseBody].
+     *
+     * @var (callable(string, string, ?string, array<int, string>): array{int, string, string})|null
+     */
+    private $transport = null;
+
+    /**
      * @param string $baseUrl  API base URL (no trailing slash).
      * @param string $apiKey   API key for X-Api-Key header.
      * @param int    $timeout  cURL timeout in seconds.
      * @param int    $retries  Maximum number of retries on transient errors.
      * @param int    $retryDelayMs  Base delay in milliseconds for exponential back-off.
+     * @param (callable(string, string, ?string, array<int, string>): array{int, string, string})|null $transport
      */
     public function __construct(
         private readonly string $baseUrl,
@@ -35,7 +45,9 @@ final class HttpClient
         private readonly int $timeout = 30,
         private readonly int $retries = 3,
         private readonly int $retryDelayMs = 500,
+        ?callable $transport = null,
     ) {
+        $this->transport = $transport;
     }
 
     /**
@@ -125,18 +137,13 @@ final class HttpClient
     }
 
     /**
-     * Execute a single HTTP round-trip using cURL.
+     * Execute a single HTTP round-trip using cURL or the injected transport.
      *
      * @param array<string, mixed>|null $data
      * @throws SnapAPIException
      */
     private function roundTrip(string $method, string $path, ?array $data): string
     {
-        $ch = curl_init($this->baseUrl . $path);
-        if ($ch === false) {
-            throw new NetworkException('Failed to initialise cURL.');
-        }
-
         $headers = [
             'X-Api-Key: ' . $this->apiKey,
             'Authorization: Bearer ' . $this->apiKey,
@@ -144,6 +151,28 @@ final class HttpClient
             'User-Agent: ' . self::USER_AGENT,
             'Accept: */*',
         ];
+
+        $bodyPayload = null;
+        if (in_array($method, ['POST', 'PATCH'], true)) {
+            $bodyPayload = $data !== null ? (string) json_encode($data) : '{}';
+        }
+
+        // Use injected transport (for testing) when available.
+        if ($this->transport !== null) {
+            /** @var array{int, string, string} $result */
+            $result = ($this->transport)($method, $this->baseUrl . $path, $bodyPayload, $headers);
+            [$httpCode, $responseHeaders, $body] = $result;
+
+            if ($httpCode >= 400) {
+                $this->throwFromResponse($body, $httpCode, $responseHeaders);
+            }
+            return $body;
+        }
+
+        $ch = curl_init($this->baseUrl . $path);
+        if ($ch === false) {
+            throw new NetworkException('Failed to initialise cURL.');
+        }
 
         $curlOpts = [
             CURLOPT_RETURNTRANSFER => true,
@@ -154,10 +183,10 @@ final class HttpClient
 
         if ($method === 'POST') {
             $curlOpts[CURLOPT_POST]       = true;
-            $curlOpts[CURLOPT_POSTFIELDS] = $data !== null ? (string) json_encode($data) : '{}';
+            $curlOpts[CURLOPT_POSTFIELDS] = $bodyPayload;
         } elseif ($method === 'PATCH') {
             $curlOpts[CURLOPT_CUSTOMREQUEST] = 'PATCH';
-            $curlOpts[CURLOPT_POSTFIELDS]    = $data !== null ? (string) json_encode($data) : '{}';
+            $curlOpts[CURLOPT_POSTFIELDS]    = $bodyPayload;
         } elseif ($method === 'DELETE') {
             $curlOpts[CURLOPT_CUSTOMREQUEST] = 'DELETE';
         }
