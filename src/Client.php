@@ -358,12 +358,24 @@ class Client
      * Record a short video of a URL.
      *
      * @param array<string, mixed> $options {
-     *   url: string,           -- required
-     *   duration?: int,        -- seconds (default 5)
-     *   format?: string,       -- "webm" (default) | "mp4" | "gif"
-     *   width?: int,
-     *   height?: int,
-     *   scrollVideo?: bool,    -- scroll-based video recording
+     *   url: string,                -- required
+     *   duration?: int,             -- seconds, 1-30 (default 5)
+     *   format?: string,            -- "mp4" (default) | "webm" | "gif"
+     *   width?: int,                -- viewport width, 320-1920 (default 1280)
+     *   height?: int,               -- viewport height, 240-1080 (default 720)
+     *   fps?: int,                  -- frames per second, 10-30 (default 25)
+     *   scrolling?: bool,           -- enable scroll-based video recording
+     *   scrollSpeed?: int,          -- scroll speed in px/s, 50-500 (default 100)
+     *   scrollDelay?: int,          -- delay before scrolling starts in ms (default 1000)
+     *   scrollDuration?: int,       -- duration of each scroll step in ms (default 300)
+     *   scrollBy?: int,             -- pixels scrolled per step (default 800)
+     *   scrollEasing?: string,      -- "linear" | "ease_in" | "ease_out" | "ease_in_out" | "ease_in_out_quint"
+     *   scrollBack?: bool,          -- scroll back to top at end (default true)
+     *   scrollComplete?: bool,      -- stop when scrolling finishes (default true)
+     *   darkMode?: bool,            -- emulate dark color scheme
+     *   blockAds?: bool,            -- block ad networks
+     *   blockCookieBanners?: bool,  -- block cookie consent banners
+     *   delay?: int,                -- wait after page load in ms before recording
      * }
      *
      * @return string Raw video bytes.
